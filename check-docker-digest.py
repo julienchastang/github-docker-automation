@@ -2,8 +2,8 @@
 
 # Can put this Python script in cron, e.g.,
 #
-# 0 */12 * * * /home/user/tomcat-docker/check-docker-digest.py
-# >> /tmp/tomcat-cron.out 2>&1
+# 0 */12 * * * /home/user/github-docker-automation/check-docker-digest.py
+# config.yml >> /tmp/tomcat-cron.out 2>&1
 
 import requests
 import datetime
