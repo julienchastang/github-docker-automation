@@ -68,6 +68,15 @@ Run the script:
 sh github_docker_processor.py path_to_your_yaml_file.yaml
 ```
 
+This script will ultimately push to DockerHub images that look like this:
+
+```sh
+docker push user/repo:5.4
+docker push user/repo:5.5
+docker push anotheruser/another-repo:master
+docker push anotheruser/another-repo:develop
+```
+
 
 <a id="h-CF21FF2B"></a>
 
