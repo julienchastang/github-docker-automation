@@ -1,0 +1,8 @@
+digest_file_path: "/tmp/tomcat-image-digest.txt"
+repository: "library/tomcat"
+tag: "8.5-jdk11"
+target_architecture: "amd64"
+sender: "user@example.edu"
+recipient: "user@example.edu"
+subject: "Upstream Tomcat Digest Updated"
+ifttt_key: "your_ifttt_key_here"
