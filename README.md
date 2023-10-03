@@ -54,8 +54,8 @@ Create a YAML file:
 repositories:
   - url: https://github.com/User/repo
     branches:
-      - 5.4
-      - 5.5
+      - "5.4"
+      - "5.5"
   - url: https://github.com/AnotherUser/another-repo
     branches:
       - master
