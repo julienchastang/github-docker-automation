@@ -109,3 +109,19 @@ This script will ultimately push to DockerHub images that look like this:
 :END:
 
 The script will remove the cloned repositories from the local machine after each Docker image has been built and pushed.
+
+* Check Docker Digest
+:PROPERTIES:
+:CUSTOM_ID: h-A97A2D1E
+:END:
+
+This Python script is designed to check for updates to a specified Docker image according to a configuration file. It can send notifications of upstream image changes via email or ifttt. Here is an example configuration looking for updates to a Tomcat container:
+
+#+INCLUDE: "../config.yaml" src yaml
+
+You can put this Python script in cron, e.g.,
+
+#+begin_src sh
+  0 */12 * * * /home/user/github-docker-automation/check-docker-digest.py \
+    config.yml >> /tmp/tomcat-cron.out 2>&1
+#+end_src
