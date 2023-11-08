@@ -3,7 +3,8 @@ repositories:
     branches:
       - "5.4"
       - "5.5"
-    dockerfile_path: "Docker/production.Dockerfile"  # Optional key
+    dockerfile_path: "Docker/production.Dockerfile"  # Optional, otherwise defaults to Dockerfile
+    image_name: "myimage" # Optional, otherwise defaults to repo name
   - url: https://github.com/AnotherUser/another-repo
     branches:
       - master
