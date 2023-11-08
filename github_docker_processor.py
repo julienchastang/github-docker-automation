@@ -18,9 +18,11 @@ def checkout_branch(repo_name, branch):
     subprocess.check_call(cmd)
 
 
-def build_docker_image(repo_name, branch, namespace):
+def build_docker_image(repo_name, branch, namespace,
+                       dockerfile_path="Dockerfile"):
     image_name = f"{namespace}/{repo_name}:{branch}"
-    cmd = ["docker", "build", "-t", image_name, repo_name]
+    cmd = ["docker", "build", "-t", image_name, "-f",
+           dockerfile_path, repo_name]
     subprocess.check_call(cmd)
     return image_name
 
@@ -38,12 +40,14 @@ def main(args):
         repo_name = None
         try:
             repo_url = repo['url']
+            dockerfile_path = repo.get('dockerfile_path', 'Dockerfile')
             print(f"Cloning {repo_url}...")
             repo_name, namespace = clone_repository(repo_url)
             for branch in repo['branches']:
                 print(f"Processing {repo_url} branch {branch}...")
                 checkout_branch(repo_name, branch)
-                image_name = build_docker_image(repo_name, branch, namespace)
+                image_name = build_docker_image(repo_name, branch, namespace,
+                                                dockerfile_path)
                 push_to_dockerhub(image_name)
         except Exception as e:
             print(f"An error occurred: {e}")
