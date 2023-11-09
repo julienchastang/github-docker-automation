@@ -90,8 +90,7 @@ def main(yaml_file):
         print(f"New digest found: {new_digest} at {now}")
         write_digest_to_file(digest_file_path, new_digest)
 
-        requests.get("https://maker.ifttt.com/trigger/tomcat/with/key/"
-                     f"{ifttt_key}")
+        requests.get(ifttt_key)
 
         body = f"New digest found: {new_digest} at {now}"
         send_email_via_sendmail(recipient, sender, subject, body)
