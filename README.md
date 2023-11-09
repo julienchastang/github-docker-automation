@@ -100,7 +100,7 @@ target_architecture: "amd64"
 sender: "user@example.edu"
 recipient: "user@example.edu"
 subject: "Upstream Tomcat Digest Updated"
-ifttt_key: "your_ifttt_key_here"
+ifttt_key: "https://maker.ifttt.com/trigger/<your_trigger_applet>/with/key/your_ifttt_key_here"
 ```
 
 You can put this Python script in cron, e.g.,
