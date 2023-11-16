@@ -5,6 +5,12 @@ import yaml
 import argparse
 
 
+def docker_cleanup():
+    print("Running Docker cleanup...")
+    cmd = ["docker", "system", "prune", "-af"]
+    subprocess.check_call(cmd)
+
+
 def clone_repository(repo_url):
     repo_name = repo_url.split('/')[-1].replace('.git', '').lower()
     namespace = repo_url.split('/')[-2].lower()
@@ -31,6 +37,9 @@ def push_to_dockerhub(image_name):
 
 
 def main(args):
+    # Make space for build(s)
+    docker_cleanup()
+
     with open(args.yaml_file, 'r') as stream:
         data = yaml.safe_load(stream)
 
