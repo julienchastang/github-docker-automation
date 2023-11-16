@@ -73,6 +73,7 @@ def main(yaml_file):
     recipient = config['recipient']
     subject = config['subject']
     ifttt_key = config['ifttt_key']
+    github_docker_repos = config.get('github_docker_repos')
 
     try:
         current_digest = read_digest_from_file(digest_file_path)
@@ -95,6 +96,12 @@ def main(yaml_file):
         body = f"New digest found: {new_digest} at {now}"
         send_email_via_sendmail(recipient, sender, subject, body)
         print(f"Updated digest in {digest_file_path}")
+
+        if github_docker_repos:
+            print("Building updated Docker images to push to DockerHub.")
+            # Invoke github_docker_processor.py with the specified argument
+            subprocess.run(['python3', 'github_docker_processor.py',
+                            github_docker_repos])
     else:
         print("Digests are the same. No update needed.")
 
