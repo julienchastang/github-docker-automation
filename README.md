@@ -5,6 +5,7 @@
   - [Usage](#h-3A9FCC1E)
   - [Cleanup](#h-CF21FF2B)
 - [Check Docker Digest](#h-A97A2D1E)
+  - [Optional Builds](#h-BE3EA4F8)
 
 
 
@@ -108,4 +109,15 @@ You can put this Python script in cron, e.g.,
 ```sh
 0 */12 * * * /home/user/github-docker-automation/check-docker-digest.py \
   config.yml >> /tmp/tomcat-cron.out 2>&1
+```
+
+
+<a id="h-BE3EA4F8"></a>
+
+## Optional Builds
+
+`check-docker-digest.py` can build and push updated images to DockerHub in response to upstream changes. To enable this feature, add an optional `github_docker_repo` key in the configuration, which should link to the repository settings used by `github_docker_processor.py`. For example:
+
+```yml
+github_docker_repos: "repos.yml"
 ```
