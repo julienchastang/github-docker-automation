@@ -5,11 +5,12 @@
 # 0 */12 * * * /home/user/github-docker-automation/check-docker-digest.py
 # config.yml >> /tmp/tomcat-cron.out 2>&1
 
-import requests
+import argparse
 import datetime
+import os
+import requests
 import subprocess
 import yaml
-import argparse
 
 
 def get_image_manifest(repository, tag):
@@ -62,7 +63,9 @@ def send_email_via_sendmail(recipient, sender, subject, body):
 
 
 def main(yaml_file):
-    with open(yaml_file, "r") as f:
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    yaml_file_path = os.path.join(current_dir, yaml_file)
+    with open(yaml_file_path, "r") as f:
         config = yaml.safe_load(f)
 
     digest_file_path = config['digest_file_path']
@@ -99,9 +102,12 @@ def main(yaml_file):
 
         if github_docker_repos:
             print("Building updated Docker images to push to DockerHub.")
-            # Invoke github_docker_processor.py with the specified argument
-            subprocess.run(['python3', 'github_docker_processor.py',
-                            github_docker_repos])
+            processor_script_path = os.path.join(current_dir,
+                                                 'github_docker_processor.py')
+            github_docker_repos_path = os.path.join(current_dir,
+                                                    github_docker_repos)
+            subprocess.run(['python3', processor_script_path,
+                            github_docker_repos_path])
     else:
         print("Digests are the same. No update needed.")
 
