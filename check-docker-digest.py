@@ -77,7 +77,7 @@ def main(yaml_file):
     subject = config['subject']
     ifttt_key = config['ifttt_key']
     # optional key
-    github_docker_repos = config.get['github_docker_repos']
+    github_docker_repos = config.get('github_docker_repos')
 
     try:
         current_digest = read_digest_from_file(digest_file_path)
