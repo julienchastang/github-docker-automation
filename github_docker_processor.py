@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
+import argparse
+import os
 import subprocess
 import yaml
-import argparse
 
 
 def docker_cleanup():
@@ -14,19 +15,20 @@ def docker_cleanup():
 def clone_repository(repo_url):
     repo_name = repo_url.split('/')[-1].replace('.git', '').lower()
     namespace = repo_url.split('/')[-2].lower()
-    cmd = ["git", "clone", repo_url]
+    target_path = os.path.join('/tmp', repo_name)
+    cmd = ["git", "clone", repo_url, target_path]
     subprocess.check_call(cmd)
-    return repo_name, namespace
+    return repo_name, namespace, target_path
 
 
-def checkout_branch(repo_name, branch):
-    cmd = ["git", "-C", repo_name, "checkout", branch]
+def checkout_branch(target_path, branch):
+    cmd = ["git", "-C", target_path, "checkout", branch]
     subprocess.check_call(cmd)
 
 
-def build_docker_image(repo_name, branch, namespace):
+def build_docker_image(repo_name, branch, namespace, target_path):
     image_name = f"{namespace}/{repo_name}:{branch}"
-    cmd = ["docker", "build", "-t", image_name, repo_name]
+    cmd = ["docker", "build", "-t", image_name, target_path]
     subprocess.check_call(cmd)
     return image_name
 
@@ -48,17 +50,18 @@ def main(args):
         try:
             repo_url = repo['url']
             print(f"Cloning {repo_url}...")
-            repo_name, namespace = clone_repository(repo_url)
+            repo_name, namespace, target_path = clone_repository(repo_url)
             for branch in repo['branches']:
                 print(f"Processing {repo_url} branch {branch}...")
-                checkout_branch(repo_name, branch)
-                image_name = build_docker_image(repo_name, branch, namespace)
+                checkout_branch(target_path, branch)  # Use target_path
+                image_name = build_docker_image(repo_name, branch, namespace,
+                                                target_path)
                 push_to_dockerhub(image_name)
         except Exception as e:
             print(f"An error occurred: {e}")
         finally:
-            if repo_name:
-                subprocess.check_call(["rm", "-rf", repo_name])
+            if target_path:
+                subprocess.check_call(["rm", "-rf", target_path])
 
 
 if __name__ == "__main__":
