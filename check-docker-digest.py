@@ -18,23 +18,33 @@ def get_image_manifest(repository, tag):
     auth_url = "https://auth.docker.io/token"
     repo_scope = f"repository:{repository}:pull"
 
-    # Get the authentication token
-    response = requests.get(auth_url,
-                            params={'service': 'registry.docker.io',
-                                    'scope': repo_scope})
-    response.raise_for_status()
-    token = response.json()['token']
+    try:
+        # Get the authentication token
+        response = requests.get(auth_url,
+                                params={'service': 'registry.docker.io',
+                                        'scope': repo_scope},
+                                timeout=10)
+        response.raise_for_status()
+        token = response.json()['token']
 
-    # Get the image manifest list
-    headers = {
-        'Authorization': f'Bearer {token}',
-        'Accept': 'application/vnd.docker.distribution.manifest.list.v2+json'
-    }
-    response = requests.get(f'{dockerhub_url}/v2/{repository}/manifests/{tag}',
-                            headers=headers)
-    response.raise_for_status()
+        accept_header = ('application/vnd.docker.distribution.manifest.list.'
+                         'v2+json')
 
-    return response.json()
+        headers = {
+            'Authorization': f'Bearer {token}',
+            'Accept': accept_header
+        }
+
+        manifest_url = f'{dockerhub_url}/v2/{repository}/manifests/{tag}'
+        response = requests.get(manifest_url, headers=headers, timeout=10)
+
+        response.raise_for_status()
+
+        return response.json()
+
+    except Exception as e:
+        print(f"An exception occurred while communicating with DockerHub: {e}")
+        return None
 
 
 def get_image_digest_for_architecture(manifest_list, architecture):
