@@ -44,8 +44,8 @@ def get_image_digest_for_architecture(manifest_list: Dict[str, Any],
                                       architecture: str) -> Optional[str]:
     """Returns the digest for specified architecture from the manifest list."""
     for manifest in manifest_list['manifests']:
-        if manifest['platform']['architecture'] == architecture
-        and manifest['platform']['os'] == 'linux':
+        if (manifest['platform']['architecture'] == architecture and
+                manifest['platform']['os'] == 'linux'):
             return manifest['digest']
     return None
 
