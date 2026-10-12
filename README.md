@@ -6,6 +6,7 @@
   - [Cleanup](#h-CF21FF2B)
 - [Check Docker Digest](#h-A97A2D1E)
   - [Optional Builds](#h-BE3EA4F8)
+- [Docker Hub Cleanup](#h:314F236D)
 
 
 
@@ -120,4 +121,79 @@ You can put this Python script in cron, e.g.,
 
 ```yml
 github_docker_repos: "repos.yml"
+```
+
+
+<a id="h:314F236D"></a>
+
+# Docker Hub Cleanup
+
+`dockerhub_cleanup.py` finds old or pattern-matched tags and repositories in any explicitly supplied Docker Hub namespace. It always runs as a non-destructive dry run unless `--execute` is given. Patterns use shell-style matching (`*`, `?`, and character ranges).
+
+Preview tags older than 90 days in matching repositories:
+
+```sh
+python3 dockerhub_cleanup.py tags \
+  --namespace exampleorg \
+  --repository-pattern 'test-*' --older-than-days 90
+```
+
+Patterns can be repeated. This example previews tags whose names start with `snapshot-` or `dev-`:
+
+```sh
+python3 dockerhub_cleanup.py tags \
+  --namespace exampleorg \
+  --tag-pattern 'snapshot-*' --tag-pattern 'dev-*'
+```
+
+Preview entire repositories, which is a separate operation from tag cleanup:
+
+```sh
+python3 dockerhub_cleanup.py repositories \
+  --namespace exampleorg \
+  --repository-pattern 'test-*' --older-than-days 365
+```
+
+Review the dry-run output before deleting. For deletion, create a Docker Hub personal access token with **Repo Read, Write, Delete** permission and provide credentials through environment variables rather than files or command-line arguments:
+
+```sh
+export DOCKERHUB_USERNAME='your-dockerhub-user'
+export DOCKERHUB_TOKEN='your-personal-access-token'
+
+python3 dockerhub_cleanup.py tags \
+  --namespace exampleorg \
+  --repository-pattern '*' --tag-pattern 'snapshot-*' \
+  --older-than-days 90 --execute
+```
+
+Credentials are optional for dry runs, but recommended for large namespaces because Docker Hub limits anonymous pagination. A read-only PAT is sufficient for a dry run and does not enable deletion without `--execute`:
+
+```sh
+export DOCKERHUB_USERNAME='your-dockerhub-user'
+read -rsp 'Docker Hub PAT: ' DOCKERHUB_TOKEN
+echo
+export DOCKERHUB_TOKEN
+
+python3 dockerhub_cleanup.py repositories --namespace exampleorg
+
+unset DOCKERHUB_USERNAME DOCKERHUB_TOKEN
+```
+
+Both credential variables must be set together. Supplying credentials never changes the dry-run default.
+
+Repository deletion requires both `--execute` and an exact namespace confirmation:
+
+```sh
+python3 dockerhub_cleanup.py repositories \
+  --namespace exampleorg \
+  --repository-pattern 'test-*' --older-than-days 365 \
+  --execute --confirm-namespace exampleorg
+```
+
+For tag deletion, `--repository-pattern` must be supplied explicitly; use `'*'` only when intentionally applying the tag filters across the whole namespace. For either deletion command, at least one name or age filter is required. An item with a missing or invalid update timestamp is excluded when an age filter is active. Tag age means `tag_last_pushed` (falling back to `last_updated`), while repository age means the repository's `last_updated` value. Neither is a measure of when an image was last pulled, so an old item may still be actively used. The tool collects all candidates before deleting, follows Docker Hub pagination, retries rate limits and temporary server errors, reports individual deletion failures, and exits with a nonzero status if any deletion fails.
+
+Run the focused tests with:
+
+```sh
+python3 -m unittest test_dockerhub_cleanup.py
 ```
