@@ -3,7 +3,7 @@
 """
 This script checks for hash updates and triggers Docker image build and push.
 Can be scheduled in cron, e.g.,
-*/10 * * * * /home/user/github-docker-automation/check-hash.py
+*/10 * * * * /home/user/github-docker-automation/check_hash.py
 tds-snap5-config.yml >> /tmp/tds-snap5.out 2>&1
 """
 

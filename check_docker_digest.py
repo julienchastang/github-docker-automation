@@ -3,7 +3,7 @@
 """
 This script checks for Docker image digest updates and triggers actions if a
 new digest is found. Can be scheduled in cron, e.g.,
-0 */12 * * * /home/user/github-docker-automation/check-docker-digest.py
+0 */12 * * * /home/user/github-docker-automation/check_docker_digest.py
 config.yml >> /tmp/tomcat-cron.out 2>&1
 """
 

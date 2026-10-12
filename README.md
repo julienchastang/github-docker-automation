@@ -108,7 +108,7 @@ ifttt_key: "https://maker.ifttt.com/trigger/<your_trigger_applet>/with/key/your_
 You can put this Python script in cron, e.g.,
 
 ```sh
-0 */12 * * * /home/user/github-docker-automation/check-docker-digest.py \
+0 */12 * * * /home/user/github-docker-automation/check_docker_digest.py \
   config.yml >> /tmp/tomcat-cron.out 2>&1
 ```
 
@@ -117,7 +117,7 @@ You can put this Python script in cron, e.g.,
 
 ## Optional Builds
 
-`check-docker-digest.py` can build and push updated images to DockerHub in response to upstream changes. To enable this feature, add an optional `github_docker_repo` key in the configuration, which should link to the repository settings used by `github_docker_processor.py`. For example:
+`check_docker_digest.py` can build and push updated images to DockerHub in response to upstream changes. To enable this feature, add an optional `github_docker_repo` key in the configuration, which should link to the repository settings used by `github_docker_processor.py`. For example:
 
 ```yml
 github_docker_repos: "repos.yml"
