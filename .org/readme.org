@@ -137,7 +137,7 @@ You can put this Python script in cron, e.g.,
 #+end_src
 * Docker Hub Cleanup
 :PROPERTIES:
-:CUSTOM_ID: h:314F236D
+:CUSTOM_ID: h-314F236D
 :END:
 
 ~dockerhub_cleanup.py~ finds old or pattern-matched tags and repositories in
