@@ -6,7 +6,7 @@
   - [Cleanup](#h-CF21FF2B)
 - [Check Docker Digest](#h-A97A2D1E)
   - [Optional Builds](#h-BE3EA4F8)
-- [Docker Hub Cleanup](#h:314F236D)
+- [Docker Hub Cleanup](#h-314F236D)
 
 
 
@@ -124,7 +124,7 @@ github_docker_repos: "repos.yml"
 ```
 
 
-<a id="h:314F236D"></a>
+<a id="h-314F236D"></a>
 
 # Docker Hub Cleanup
 
