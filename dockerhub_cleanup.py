@@ -32,15 +32,14 @@ class DockerHubClient:
     def login(cls, username: str, password: str) -> "DockerHubClient":
         client = cls()
         response = client.request(
-            "POST", "/auth/token",
-            {"identifier": username, "secret": password})
+            "POST", "/auth/token", {"identifier": username, "secret": password}
+        )
         token = response.get("access_token")
         if not token:
             raise DockerHubError("Docker Hub authentication returned no token")
         return cls(token)
 
-    def request(self, method: str, path: str,
-                body: Optional[Dict[str, str]] = None):
+    def request(self, method: str, path: str, body: Optional[Dict[str, str]] = None):
         url = path if path.startswith("http") else API_URL + path
         data = json.dumps(body).encode("utf-8") if body is not None else None
         headers = {"Accept": "application/json"}
@@ -52,7 +51,8 @@ class DockerHubClient:
         for attempt in range(3):
             try:
                 request = urllib.request.Request(
-                    url, data=data, headers=headers, method=method)
+                    url, data=data, headers=headers, method=method
+                )
                 with urllib.request.urlopen(request, timeout=30) as response:
                     content = response.read()
                     return json.loads(content) if content else {}
@@ -61,17 +61,21 @@ class DockerHubClient:
                 if error.code == 429 or error.code >= 500:
                     if attempt < 2:
                         retry_after = error.headers.get("Retry-After")
-                        delay = (int(retry_after) if retry_after and
-                                 retry_after.isdigit() else attempt + 1)
+                        delay = (
+                            int(retry_after)
+                            if retry_after and retry_after.isdigit()
+                            else attempt + 1
+                        )
                         time.sleep(min(delay, 30))
                         continue
                 raise DockerHubError(
                     f"Docker Hub returned HTTP {error.code} for {method} "
-                    f"{url}: {details or error.reason}") from error
+                    f"{url}: {details or error.reason}"
+                ) from error
             except urllib.error.URLError as error:
                 raise DockerHubError(
-                    f"Could not reach Docker Hub for {method} {url}: "
-                    f"{error.reason}") from error
+                    f"Could not reach Docker Hub for {method} {url}: {error.reason}"
+                ) from error
         raise DockerHubError(f"Docker Hub request failed: {method} {url}")
 
     def paginated(self, path: str) -> Iterable[Dict]:
@@ -83,27 +87,28 @@ class DockerHubClient:
 
     def repositories(self, namespace: str) -> Iterable[Dict]:
         namespace = urllib.parse.quote(namespace, safe="")
-        return self.paginated(
-            f"/namespaces/{namespace}/repositories?page_size=100")
+        return self.paginated(f"/namespaces/{namespace}/repositories?page_size=100")
 
     def tags(self, namespace: str, repository: str) -> Iterable[Dict]:
         namespace = urllib.parse.quote(namespace, safe="")
         repository = urllib.parse.quote(repository, safe="")
         return self.paginated(
-            f"/namespaces/{namespace}/repositories/{repository}/tags"
-            f"?page_size=100")
+            f"/namespaces/{namespace}/repositories/{repository}/tags?page_size=100"
+        )
 
     def delete_tag(self, namespace: str, repository: str, tag: str) -> None:
-        parts = [urllib.parse.quote(value, safe="")
-                 for value in (namespace, repository, tag)]
-        self.request("DELETE", f"/namespaces/{parts[0]}/repositories/"
-                     f"{parts[1]}/tags/{parts[2]}")
+        parts = [
+            urllib.parse.quote(value, safe="") for value in (namespace, repository, tag)
+        ]
+        self.request(
+            "DELETE", f"/namespaces/{parts[0]}/repositories/{parts[1]}/tags/{parts[2]}"
+        )
 
     def delete_repository(self, namespace: str, repository: str) -> None:
-        parts = [urllib.parse.quote(value, safe="")
-                 for value in (namespace, repository)]
-        self.request("DELETE", f"/namespaces/{parts[0]}/repositories/"
-                     f"{parts[1]}")
+        parts = [
+            urllib.parse.quote(value, safe="") for value in (namespace, repository)
+        ]
+        self.request("DELETE", f"/namespaces/{parts[0]}/repositories/{parts[1]}")
 
 
 def parse_date(value: Optional[str]) -> Optional[datetime.datetime]:
@@ -119,8 +124,12 @@ def parse_date(value: Optional[str]) -> Optional[datetime.datetime]:
     return parsed.astimezone(datetime.timezone.utc)
 
 
-def matches(name: str, patterns: List[str], updated: Optional[str],
-            cutoff: Optional[datetime.datetime]) -> bool:
+def matches(
+    name: str,
+    patterns: List[str],
+    updated: Optional[str],
+    cutoff: Optional[datetime.datetime],
+) -> bool:
     """Return whether a name and timestamp satisfy all supplied criteria."""
     if not any(fnmatch.fnmatchcase(name, pattern) for pattern in patterns):
         return False
@@ -133,15 +142,21 @@ def matches(name: str, patterns: List[str], updated: Optional[str],
 def cutoff_for(days: Optional[int]) -> Optional[datetime.datetime]:
     if days is None:
         return None
-    return (datetime.datetime.now(datetime.timezone.utc) -
-            datetime.timedelta(days=days))
+    return datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=days)
 
 
-def selected_repositories(client: DockerHubClient, args: argparse.Namespace,
-                          cutoff: Optional[datetime.datetime]) -> Iterable[Dict]:
+def selected_repositories(
+    client: DockerHubClient,
+    args: argparse.Namespace,
+    cutoff: Optional[datetime.datetime],
+) -> Iterable[Dict]:
     for repository in client.repositories(args.namespace):
-        if matches(repository["name"], args.repository_pattern,
-                   repository.get("last_updated"), cutoff):
+        if matches(
+            repository["name"],
+            args.repository_pattern,
+            repository.get("last_updated"),
+            cutoff,
+        ):
             yield repository
 
 
@@ -149,8 +164,7 @@ def credentials() -> tuple:
     username = os.environ.get("DOCKERHUB_USERNAME")
     token = os.environ.get("DOCKERHUB_TOKEN")
     if not username or not token:
-        raise DockerHubError(
-            "deletion requires DOCKERHUB_USERNAME and DOCKERHUB_TOKEN")
+        raise DockerHubError("deletion requires DOCKERHUB_USERNAME and DOCKERHUB_TOKEN")
     return username, token
 
 
@@ -162,26 +176,32 @@ def validate_execution(args: argparse.Namespace) -> None:
         if not args.repository_filter_supplied:
             raise DockerHubError(
                 "tag deletion requires an explicit --repository-pattern "
-                "(use '*' to acknowledge all repositories)")
-        if (not has_repository_filter and args.tag_pattern == ["*"] and
-                args.older_than_days is None):
+                "(use '*' to acknowledge all repositories)"
+            )
+        if (
+            not has_repository_filter
+            and args.tag_pattern == ["*"]
+            and args.older_than_days is None
+        ):
             raise DockerHubError(
-                "refusing to delete all tags without a name or age filter")
+                "refusing to delete all tags without a name or age filter"
+            )
     elif not has_repository_filter and args.older_than_days is None:
         raise DockerHubError(
-            "refusing to delete all repositories without a name or age filter")
-    if (args.command == "repositories" and
-            args.confirm_namespace != args.namespace):
+            "refusing to delete all repositories without a name or age filter"
+        )
+    if args.command == "repositories" and args.confirm_namespace != args.namespace:
         raise DockerHubError(
-            "repository deletion requires --confirm-namespace "
-            f"{args.namespace}")
+            f"repository deletion requires --confirm-namespace {args.namespace}"
+        )
 
 
 def run(args: argparse.Namespace) -> int:
     validate_execution(args)
     client = DockerHubClient()
-    has_credentials = (os.environ.get("DOCKERHUB_USERNAME") or
-                       os.environ.get("DOCKERHUB_TOKEN"))
+    has_credentials = os.environ.get("DOCKERHUB_USERNAME") or os.environ.get(
+        "DOCKERHUB_TOKEN"
+    )
     if has_credentials:
         client = DockerHubClient.login(*credentials())
     elif args.execute:
@@ -195,8 +215,7 @@ def run(args: argparse.Namespace) -> int:
     else:
         repository_cutoff = cutoff_for(args.older_than_days)
 
-    repositories = list(selected_repositories(
-        client, args, repository_cutoff))
+    repositories = list(selected_repositories(client, args, repository_cutoff))
     if args.command == "tags":
         candidates = []
         for repository in repositories:
@@ -210,8 +229,7 @@ def run(args: argparse.Namespace) -> int:
             target = f"{args.namespace}/{repository_name}:{tag['name']}"
             count += 1
             if not args.execute:
-                print(f"would delete tag {target} "
-                      f"(updated {updated or 'unknown'})")
+                print(f"would delete tag {target} (updated {updated or 'unknown'})")
                 continue
             print(f"deleting tag {target} (updated {updated or 'unknown'})")
             try:
@@ -227,11 +245,11 @@ def run(args: argparse.Namespace) -> int:
             target = f"{args.namespace}/{repository_name}"
             count += 1
             if not args.execute:
-                print(f"would delete repository {target} "
-                      f"(updated {updated or 'unknown'})")
+                print(
+                    f"would delete repository {target} (updated {updated or 'unknown'})"
+                )
                 continue
-            print(f"deleting repository {target} "
-                  f"(updated {updated or 'unknown'})")
+            print(f"deleting repository {target} (updated {updated or 'unknown'})")
             try:
                 client.delete_repository(args.namespace, repository_name)
                 print(f"deleted repository {target}")
@@ -240,42 +258,62 @@ def run(args: argparse.Namespace) -> int:
                 print(f"error: {error}", file=sys.stderr)
 
     action = "deleted" if args.execute else "found"
-    print(f"{action} {count - failures} candidate(s)" +
-          (f"; {failures} deletion(s) failed" if failures else ""))
+    print(
+        f"{action} {count - failures} candidate(s)"
+        + (f"; {failures} deletion(s) failed" if failures else "")
+    )
     return 1 if failures else 0
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Find and delete Docker Hub tags or repositories. "
-                    "Runs as a dry run unless --execute is supplied.")
+        "Runs as a dry run unless --execute is supplied."
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     def common(subparser: argparse.ArgumentParser) -> None:
         subparser.add_argument(
-            "--namespace", required=True,
-            help="Docker Hub user or organization namespace")
+            "--namespace",
+            required=True,
+            help="Docker Hub user or organization namespace",
+        )
         subparser.add_argument(
-            "--repository-pattern", action="append", default=None,
-            help="repository shell pattern; repeat to match several")
+            "--repository-pattern",
+            action="append",
+            default=None,
+            help="repository shell pattern; repeat to match several",
+        )
         subparser.add_argument(
-            "--older-than-days", type=int, metavar="DAYS",
-            help="only select items last updated more than DAYS ago")
+            "--older-than-days",
+            type=int,
+            metavar="DAYS",
+            help="only select items last updated more than DAYS ago",
+        )
         subparser.add_argument(
-            "--execute", action="store_true",
-            help="perform deletions instead of displaying candidates")
+            "--execute",
+            action="store_true",
+            help="perform deletions instead of displaying candidates",
+        )
 
     tags = subparsers.add_parser("tags", help="clean up image tags")
     common(tags)
-    tags.add_argument("--tag-pattern", action="append", default=None,
-                      help="tag shell pattern; repeat to match several")
+    tags.add_argument(
+        "--tag-pattern",
+        action="append",
+        default=None,
+        help="tag shell pattern; repeat to match several",
+    )
 
     repositories = subparsers.add_parser(
-        "repositories", help="clean up entire repositories")
+        "repositories", help="clean up entire repositories"
+    )
     common(repositories)
     repositories.add_argument(
-        "--confirm-namespace", metavar="NAMESPACE",
-        help="required with --execute; must equal --namespace")
+        "--confirm-namespace",
+        metavar="NAMESPACE",
+        help="required with --execute; must equal --namespace",
+    )
     return parser
 
 
