@@ -12,7 +12,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 
 API_URL = "https://hub.docker.com/v2"
@@ -78,18 +78,18 @@ class DockerHubClient:
                 ) from error
         raise DockerHubError(f"Docker Hub request failed: {method} {url}")
 
-    def paginated(self, path: str) -> Iterable[Dict]:
+    def paginated(self, path: str) -> Iterable[Dict[str, Any]]:
         next_url: Optional[str] = path
         while next_url:
             page = self.request("GET", next_url)
             yield from page.get("results", [])
             next_url = page.get("next")
 
-    def repositories(self, namespace: str) -> Iterable[Dict]:
+    def repositories(self, namespace: str) -> Iterable[Dict[str, Any]]:
         namespace = urllib.parse.quote(namespace, safe="")
         return self.paginated(f"/namespaces/{namespace}/repositories?page_size=100")
 
-    def tags(self, namespace: str, repository: str) -> Iterable[Dict]:
+    def tags(self, namespace: str, repository: str) -> Iterable[Dict[str, Any]]:
         namespace = urllib.parse.quote(namespace, safe="")
         repository = urllib.parse.quote(repository, safe="")
         return self.paginated(
@@ -149,7 +149,7 @@ def selected_repositories(
     client: DockerHubClient,
     args: argparse.Namespace,
     cutoff: Optional[datetime.datetime],
-) -> Iterable[Dict]:
+) -> Iterable[Dict[str, Any]]:
     for repository in client.repositories(args.namespace):
         if matches(
             repository["name"],
@@ -160,7 +160,7 @@ def selected_repositories(
             yield repository
 
 
-def credentials() -> tuple:
+def credentials() -> tuple[str, str]:
     username = os.environ.get("DOCKERHUB_USERNAME")
     token = os.environ.get("DOCKERHUB_TOKEN")
     if not username or not token:
@@ -209,6 +209,7 @@ def run(args: argparse.Namespace) -> int:
 
     failures = 0
     count = 0
+    tag_cutoff = None
     if args.command == "tags":
         repository_cutoff = None
         tag_cutoff = cutoff_for(args.older_than_days)

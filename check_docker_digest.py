@@ -100,6 +100,10 @@ def main(yaml_file: str) -> None:
     manifest_list = get_image_manifest(repository, tag)
     new_digest = get_image_digest_for_architecture(manifest_list, target_architecture)
 
+    if new_digest is None:
+        print(f"No digest found for architecture {target_architecture}.")
+        return
+
     if new_digest != current_digest:
         now = datetime.datetime.now()
         print(f"New digest found: {new_digest} at {now}")
